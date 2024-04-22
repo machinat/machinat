@@ -12,10 +12,12 @@ import type WebviewClient from './Client.js';
 export type ClientEventContext<
   Authenticator extends AnyClientAuthenticator = AnyClientAuthenticator,
   Value extends EventValue = EventValue,
+  Params = null,
 > = {
   event: WebviewEvent<Value, UserOfAuthenticator<Authenticator>>;
   authenticator: Authenticator;
   auth: ContextOfAuthenticator<Authenticator>;
+  params: null | Params;
 };
 
 export type EventContextOfClient<

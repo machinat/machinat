@@ -6,7 +6,11 @@ import type {
   ContextOfAuthenticator,
 } from '@sociably/auth';
 import { Connector, ClientEmitter } from '@sociably/websocket/client';
-import { DEFAULT_AUTH_ROUTE, DEFAULT_WEBSOCKET_ROUTE } from '../constant.js';
+import {
+  DEFAULT_AUTH_ROUTE,
+  DEFAULT_WEBSOCKET_ROUTE,
+  WEBVIEW_PARAMS_QUERY_KEY,
+} from '../constant.js';
 import WebviewConnection from '../Connection.js';
 import createEvent from '../utils/createEvent.js';
 import type {
@@ -21,10 +25,12 @@ import type { ClientEventContext, ClientOptions } from './types.js';
 class WebviewClient<
   Authenticator extends AnyClientAuthenticator = AnyClientAuthenticator,
   Value extends EventValue = EventValue,
+  Params = null,
 > extends ClientEmitter<
   ClientEventContext<
     Authenticator,
-    Value | ConnectEventValue | DisconnectEventValue
+    Value | ConnectEventValue | DisconnectEventValue,
+    Params
   >
 > {
   private _authClient: AuthClient<Authenticator>;
@@ -35,6 +41,7 @@ class WebviewClient<
   private _thread: null | WebviewConnection;
 
   isMockupMode: boolean;
+  params: null | Params;
 
   get isConnected(): boolean {
     return this._connector.isConnected();
@@ -71,6 +78,7 @@ class WebviewClient<
 
     this._user = null;
     this._thread = null;
+    this.params = null;
     this.isMockupMode = mockupMode;
     this._platformInput = platform;
 
@@ -95,6 +103,19 @@ class WebviewClient<
       .on('events', this._handleEvent.bind(this))
       .on('disconnect', this._handleDisconnect.bind(this))
       .on('error', this._emitError.bind(this));
+
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      const params = url.searchParams.get(WEBVIEW_PARAMS_QUERY_KEY);
+
+      if (params) {
+        try {
+          this.params = JSON.parse(params);
+        } catch (error) {
+          console.warn('Failed to parse webview params:', error);
+        }
+      }
+    }
 
     if (!this.isMockupMode) {
       this._connector.connect();
@@ -154,6 +175,7 @@ class WebviewClient<
       ),
       auth: this.authContext as ContextOfAuthenticator<Authenticator>,
       authenticator: this._authClient.getAuthenticator()!,
+      params: this.params,
     });
   }
 
@@ -163,6 +185,7 @@ class WebviewClient<
         event: createEvent(value, this._thread!, this._user!),
         auth: this.authContext as ContextOfAuthenticator<Authenticator>,
         authenticator: this._authClient.getAuthenticator()!,
+        params: this.params,
       });
     }
   }
@@ -183,6 +206,7 @@ class WebviewClient<
       ),
       auth: this.authContext as ContextOfAuthenticator<Authenticator>,
       authenticator: this._authClient.getAuthenticator()!,
+      params: this.params,
     });
   }
 }

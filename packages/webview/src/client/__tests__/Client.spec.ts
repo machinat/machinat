@@ -12,38 +12,15 @@ const Connector = _Connector as Moxy<typeof _Connector>;
 const AuthClient = _AuthClient as Moxy<typeof _AuthClient>;
 const BaseMarshaler = _BaseMarshaler as Moxy<typeof _BaseMarshaler>;
 
-jest.mock('@sociably/websocket/client/Connector', () => ({
-  __esModule: true,
-  default: moxy(function FakeConnector() {
-    return moxy(
-      Object.assign(new EventEmitter(), {
-        connect: () => {},
-        send: async () => {},
-        close: () => {},
-        isConnected: () => false,
-      }),
-    );
-  }),
-}));
-
-jest.mock('@sociably/auth/client', () => ({
-  __esModule: true,
-  default: moxy(function FakeAuthClient({ authenticators }) {
-    return moxy({
-      bootstrap: async () => {},
-      signIn: async () => ({ context: {}, token: '_TOKEN_' }),
-      getAuthContext: () => ({ platform: 'test' /* ... */ }),
-      getAuthenticator: () =>
-        authenticators.find(({ platform }) => platform === 'test'),
-    });
-  }),
-}));
-jest.mock('@sociably/core/base/Marshaler', () =>
-  moxy(jest.requireActual('@sociably/core/base/Marshaler')),
-);
-
-const location = moxy(parseUrl('https://sociably.io/hello'));
-(global as any).window = { location };
+const webviewParams = { hello: 'world', have: 'fun' };
+const window = moxy({
+  location: parseUrl(
+    `https://sociably.io/hello?webviewParams=${encodeURIComponent(
+      JSON.stringify(webviewParams),
+    )}`,
+  ),
+});
+(global as any).window = window;
 
 const testAuthenticator = moxy<AnyClientAuthenticator>({
   platform: 'test',
@@ -65,13 +42,45 @@ const authContext = {
   loginAt: new Date(),
   expireAt: new Date(Date.now() + 9999),
 };
+
 const eventSpy = moxy();
+
+jest.mock('@sociably/websocket/client/Connector', () => ({
+  __esModule: true,
+  default: moxy(function FakeConnector() {
+    return moxy(
+      Object.assign(new EventEmitter(), {
+        connect: () => {},
+        send: async () => {},
+        close: () => {},
+        isConnected: () => false,
+      }),
+    );
+  }),
+}));
+
+jest.mock('@sociably/auth/client', () => ({
+  __esModule: true,
+  default: moxy(function FakeAuthClient({ authenticators }) {
+    return moxy({
+      bootstrap: async () => {},
+      signIn: async () => ({ context: {}, token: '_TOKEN_' }),
+      getAuthContext: () => authContext,
+      getAuthenticator: () =>
+        authenticators.find(({ platform }) => platform === 'test'),
+    });
+  }),
+}));
+
+jest.mock('@sociably/core/base/Marshaler', () =>
+  moxy(jest.requireActual('@sociably/core/base/Marshaler')),
+);
 
 beforeEach(() => {
   Connector.mock.reset();
   AuthClient.mock.reset();
   BaseMarshaler.mock.reset();
-  location.mock.reset();
+  window.mock.reset();
   eventSpy.mock.clear();
   testAuthenticator.mock.reset();
   anotherAuthenticator.mock.reset();
@@ -108,7 +117,6 @@ it('start connector and auth client', async () => {
   });
 
   const authClient = AuthClient.mock.calls[0].instance;
-  authClient.getAuthContext.mock.fake(() => authContext);
 
   const login = Connector.mock.calls[0].args[1];
   await login();
@@ -130,6 +138,7 @@ it('start connector and auth client', async () => {
     },
     auth: authContext,
     authenticator: testAuthenticator,
+    params: webviewParams,
   });
 
   expect(client.isConnected).toBe(true);
@@ -241,9 +250,6 @@ it('emit "event" when dispatched events received', async () => {
   const client = new Client({ authPlatforms: [testAuthenticator] });
   client.onEvent(eventSpy);
 
-  const authClient = AuthClient.mock.calls[0].instance;
-  authClient.getAuthContext.mock.fake(() => authContext);
-
   const connector = Connector.mock.calls[0].instance;
   connector.emit('connect', { connId: '#conn', user });
 
@@ -273,6 +279,7 @@ it('emit "event" when dispatched events received', async () => {
     },
     auth: authContext,
     authenticator: testAuthenticator,
+    params: webviewParams,
   });
   expect(eventSpy).toHaveBeenNthCalledWith(3, {
     event: {
@@ -285,6 +292,7 @@ it('emit "event" when dispatched events received', async () => {
     },
     auth: authContext,
     authenticator: testAuthenticator,
+    params: webviewParams,
   });
 
   connector.emit(
@@ -305,6 +313,7 @@ it('emit "event" when dispatched events received', async () => {
     },
     auth: authContext,
     authenticator: testAuthenticator,
+    params: webviewParams,
   });
 });
 
@@ -333,12 +342,50 @@ it('send events', async () => {
   expect(connector.send).toHaveBeenCalledWith([{ type: 'baz', payload: 3 }]);
 });
 
+it.each([
+  `https://sociably.io/hello`,
+  `https://sociably.io/hello?webviewParams=`,
+  `https://sociably.io/hello?webviewParams=__MALFORMED_CONTENT__`,
+])(
+  'emit `params` as null when `webviewParams` query is omitted or malformed',
+  async (url) => {
+    // disable console warning
+    const _console = console;
+    const fakeConsole = (global.console = moxy(console)); // eslint-disable-line no-multi-assign
+    fakeConsole.warn.mock.fake(() => {});
+
+    window.mock.getter('location').fakeOnce(() => parseUrl(url));
+
+    const client = new Client({ authPlatforms: [testAuthenticator] });
+    client.onEvent(eventSpy);
+    expect(client.params).toBe(null);
+
+    const connector = Connector.mock.calls[0].instance;
+    connector.emit('connect', { connId: '#conn', user });
+    expect(eventSpy).toHaveBeenCalledWith({
+      event: {
+        category: 'connection',
+        type: 'connect',
+        payload: null,
+        channel: null,
+        user,
+        thread: new WebviewConnection('*', '#conn'),
+      },
+      auth: authContext,
+      authenticator: testAuthenticator,
+      params: null,
+    });
+
+    if (url.endsWith('__MALFORMED_CONTENT__')) {
+      expect(fakeConsole.warn).toHaveBeenCalledTimes(1);
+    }
+    global.console = _console;
+  },
+);
+
 test('disconnected by server', async () => {
   const client = new Client({ authPlatforms: [testAuthenticator] });
   client.onEvent(eventSpy);
-
-  const authClient = AuthClient.mock.calls[0].instance;
-  authClient.getAuthContext.mock.fake(() => authContext);
 
   const connector = Connector.mock.calls[0].instance;
   connector.emit('connect', { connId: '#conn', user });
@@ -363,6 +410,7 @@ test('disconnected by server', async () => {
     },
     auth: authContext,
     authenticator: testAuthenticator,
+    params: webviewParams,
   });
 
   expect(client.user).toEqual(user);
@@ -372,9 +420,6 @@ test('disconnected by server', async () => {
 test('.close()', async () => {
   const client = new Client({ authPlatforms: [testAuthenticator] });
   client.onEvent(eventSpy);
-
-  const authClient = AuthClient.mock.calls[0].instance;
-  authClient.getAuthContext.mock.fake(() => authContext);
 
   const connector = Connector.mock.calls[0].instance;
   connector.emit('connect', { connId: '#conn', user });
@@ -399,6 +444,7 @@ test('.close()', async () => {
     },
     auth: authContext,
     authenticator: testAuthenticator,
+    params: webviewParams,
   });
 
   expect(client.user).toEqual(user);
