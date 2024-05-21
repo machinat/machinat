@@ -38,7 +38,7 @@ test('rendering to UrlButtonParam', () => {
     WebviewButtonParam(
       authenticator,
       new WhatsAppChat('1234567890', '9876543210'),
-    )({ page: '/foo?bar=baz', index: 1 }),
+    )({ page: '/foo', index: 1, params: { hello: 'world' } }),
   ).toMatchInlineSnapshot(`
     <UrlButtonParam
       index={1}
@@ -49,23 +49,31 @@ test('rendering to UrlButtonParam', () => {
   expect(authenticator.getAuthUrlPostfix).toHaveBeenCalledTimes(3);
   expect(authenticator.getAuthUrlPostfix).toHaveBeenCalledWith(
     new WhatsAppChat('1234567890', '9876543210'),
-    undefined,
+    {},
   );
   expect(authenticator.getAuthUrlPostfix).toHaveBeenNthCalledWith(
     2,
     new WhatsAppChat('1234567890', '9876543210'),
-    'foo?bar=baz',
+    { redirectUrl: 'foo?bar=baz' },
+  );
+  expect(authenticator.getAuthUrlPostfix).toHaveBeenNthCalledWith(
+    3,
+    new WhatsAppChat('1234567890', '9876543210'),
+    {
+      redirectUrl: 'foo',
+      webviewParams: { hello: 'world' },
+    },
   );
 });
 
 test('throw if thread is not a WhatsAppChat', () => {
   expect(() =>
-    WebviewButtonParam(authenticator, null)({}),
+    WebviewButtonParam(authenticator, null as never)({}),
   ).toThrowErrorMatchingInlineSnapshot(
     `"WebviewButtonParam can only be used in WhatsAppChat"`,
   );
   expect(() =>
-    WebviewButtonParam(authenticator, null)({ page: '/foo' }),
+    WebviewButtonParam(authenticator, null as never)({ page: '/foo' }),
   ).toThrowErrorMatchingInlineSnapshot(
     `"WebviewButtonParam can only be used in WhatsAppChat"`,
   );
@@ -75,7 +83,7 @@ test('throw if thread is not a WhatsAppChat', () => {
     uniqueIdentifier: { platform: 'test', id: 'foo' },
   };
   expect(() =>
-    WebviewButtonParam(authenticator, wrongThread)({}),
+    WebviewButtonParam(authenticator, wrongThread as never)({}),
   ).toThrowErrorMatchingInlineSnapshot(
     `"WebviewButtonParam can only be used in WhatsAppChat"`,
   );

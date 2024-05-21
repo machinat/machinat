@@ -5,6 +5,7 @@ import {
   CheckDataResult,
 } from '@sociably/auth';
 import BasicAuthenticator from '@sociably/auth/basicAuth';
+import { attachWebviewParamsOnUrl } from '@sociably/webview/client';
 import TwitterApiError from '../Error.js';
 import BotP from '../Bot.js';
 import ProfilerP from '../Profiler.js';
@@ -70,12 +71,22 @@ export class TwitterServerAuthenticator
     });
   }
 
-  getAuthUrl(agentId: string, userId: string, redirectUrl?: string): string {
-    return this.basicAuthenticator.getAuthUrl<TwitterAuthCredential>(
+  getAuthUrl(
+    agentId: string,
+    userId: string,
+    options?: {
+      redirectUrl?: string;
+      webviewParams?: Record<string, string>;
+    },
+  ): string {
+    const authUrl = this.basicAuthenticator.getAuthUrl<TwitterAuthCredential>(
       TWITTER,
       { agent: agentId, user: userId },
-      redirectUrl,
+      options?.redirectUrl,
     );
+    return options?.webviewParams
+      ? attachWebviewParamsOnUrl(authUrl, options.webviewParams)
+      : authUrl;
   }
 
   // eslint-disable-next-line class-methods-use-this

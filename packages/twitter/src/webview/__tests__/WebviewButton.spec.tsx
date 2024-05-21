@@ -25,7 +25,10 @@ test('rendering to UrlButton', () => {
   `);
 
   expect(
-    WebviewButton(authenticator, chat)({ label: 'Foo', page: '/foo?bar=baz' }),
+    WebviewButton(
+      authenticator,
+      chat,
+    )({ label: 'Foo', page: '/foo?bar=baz', params: { hello: 'world' } }),
   ).toMatchInlineSnapshot(`
     <UrlButton
       label="Foo"
@@ -38,20 +41,22 @@ test('rendering to UrlButton', () => {
     1,
     '1234567890',
     '9876543210',
-    undefined,
+    {},
   );
   expect(authenticator.getAuthUrl).toHaveBeenNthCalledWith(
     2,
     '1234567890',
     '9876543210',
-    'foo?bar=baz',
+    { redirectUrl: 'foo?bar=baz', webviewParams: { hello: 'world' } },
   );
 });
 
 test('rendering to null if thread is not a TwitterChat', () => {
-  expect(WebviewButton(authenticator, null)({ label: 'Foo' })).toBe(null);
+  expect(WebviewButton(authenticator, null as never)({ label: 'Foo' })).toBe(
+    null,
+  );
   expect(
-    WebviewButton(authenticator, null)({ label: 'Foo', page: '/foo' }),
+    WebviewButton(authenticator, null as never)({ label: 'Foo', page: '/foo' }),
   ).toBe(null);
   expect(
     WebviewButton(authenticator, new TweetTarget('12345'))({ label: 'Foo' }),

@@ -230,11 +230,19 @@ test('.getAuthUrl(id, path)', async () => {
     agentSettingsAccessor,
   );
   await expect(authenticator.getAuthUrl(user)).resolves.toBe(loginUrl);
-  await expect(authenticator.getAuthUrl(user, '/foo?bar=baz')).resolves.toBe(
-    loginUrl,
+  await expect(
+    authenticator.getAuthUrl(user, { redirectUrl: '/foo?bar=baz' }),
+  ).resolves.toBe(loginUrl);
+  await expect(
+    authenticator.getAuthUrl(user, {
+      redirectUrl: '/foo',
+      webviewParams: { bar: 'baz' },
+    }),
+  ).resolves.toBe(
+    `${loginUrl}&webviewParams=${encodeURIComponent('{"bar":"baz"}')}`,
   );
 
-  expect(basicAuthenticator.getAuthUrl).toHaveBeenCalledTimes(2);
+  expect(basicAuthenticator.getAuthUrl).toHaveBeenCalledTimes(3);
   expect(basicAuthenticator.getAuthUrl).toHaveBeenNthCalledWith(
     1,
     'instagram',
@@ -246,6 +254,12 @@ test('.getAuthUrl(id, path)', async () => {
     'instagram',
     { agent: { id: '1234567890', name: 'jojodoe123' }, user: '9876543210' },
     '/foo?bar=baz',
+  );
+  expect(basicAuthenticator.getAuthUrl).toHaveBeenNthCalledWith(
+    3,
+    'instagram',
+    { agent: { id: '1234567890', name: 'jojodoe123' }, user: '9876543210' },
+    '/foo',
   );
 });
 

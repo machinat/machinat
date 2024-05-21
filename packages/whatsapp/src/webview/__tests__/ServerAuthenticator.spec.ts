@@ -32,6 +32,7 @@ const basicAuthenticator = moxy<BasicAuthenticator>({
 const agentSettings = {
   numberId: '2222222222',
   phoneNumber: '+1234567890',
+  businessAccountId: '1234567890',
 };
 const agentSettingsAccessor = moxy({
   getAgentSettings: async () => agentSettings,
@@ -188,9 +189,11 @@ test('.getAuthUrlPostfix(id, path)', () => {
   expect(
     authenticator.getAuthUrlPostfix(
       new WhatsAppChat('1111111111', '9876543210'),
-      '/foo?bar=baz',
+      { redirectUrl: '/foo?bar=baz', webviewParams: { foo: 'bar' } },
     ),
-  ).toBe(expectedSuffix);
+  ).toBe(
+    `${expectedSuffix}&webviewParams=${encodeURIComponent('{"foo":"bar"}')}`,
+  );
 
   expect(basicAuthenticator.getAuthUrl).toHaveBeenCalledTimes(2);
   expect(basicAuthenticator.getAuthUrl).toHaveBeenNthCalledWith(

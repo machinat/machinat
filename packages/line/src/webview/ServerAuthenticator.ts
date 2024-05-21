@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'http';
 import { join as joinPath } from 'path/posix';
 import { serviceProviderClass } from '@sociably/core/service';
 import { ServerAuthenticator, CheckDataResult } from '@sociably/auth';
+import { attachWebviewParamsOnUrl } from '@sociably/webview/client';
 import { AgentSettingsAccessorI } from '../interface.js';
 import LineChannel from '../Channel.js';
 import LineChat from '../Chat.js';
@@ -37,6 +38,7 @@ export type LiffUrlOptions = {
   path?: string;
   chat?: LineChat;
   liffAppChoice?: keyof LiffAppChoiceSetting;
+  webviewParams?: Record<string, unknown>;
 };
 
 /** @category Provider */
@@ -55,7 +57,12 @@ export class LineServerAuthenticator
 
   async getLiffUrl(
     channel: LineChannel,
-    { path, chat, liffAppChoice = 'default' }: LiffUrlOptions = {},
+    {
+      path,
+      chat,
+      liffAppChoice = 'default',
+      webviewParams,
+    }: LiffUrlOptions = {},
   ): Promise<string> {
     const setting = await this.agentSettingsAccessor.getAgentSettings(channel);
     if (!setting?.liffApps) {
@@ -79,7 +86,9 @@ export class LineServerAuthenticator
       liffUrl.searchParams.set(ROOM_ID_QUERY_KEY, chat.id);
     }
 
-    return liffUrl.href;
+    return webviewParams
+      ? attachWebviewParamsOnUrl(liffUrl.href, webviewParams)
+      : liffUrl.href;
   }
 
   // eslint-disable-next-line class-methods-use-this

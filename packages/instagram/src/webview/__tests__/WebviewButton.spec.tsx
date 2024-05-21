@@ -45,7 +45,7 @@ test('rendering to UrlButton', async () => {
     WebviewButton(
       authenticator,
       new InstagramChat('12345', { id: '67890' }),
-    )({ title: 'Foo', page: '/foo?bar=baz' }),
+    )({ title: 'Foo', page: '/foo?bar=baz', params: { hello: 'world' } }),
   ).resolves.toMatchInlineSnapshot(`
     <UrlButton
       title="Foo"
@@ -57,17 +57,17 @@ test('rendering to UrlButton', async () => {
   expect(authenticator.getAuthUrl).toHaveBeenNthCalledWith(
     1,
     new InstagramUser('12345', '67890'),
-    undefined,
+    {},
   );
   expect(authenticator.getAuthUrl).toHaveBeenNthCalledWith(
     2,
     new InstagramUser('12345', '67890'),
-    undefined,
+    {},
   );
   expect(authenticator.getAuthUrl).toHaveBeenNthCalledWith(
     3,
     new InstagramUser('12345', '67890'),
-    'foo?bar=baz',
+    { redirectUrl: 'foo?bar=baz', webviewParams: { hello: 'world' } },
   );
 });
 

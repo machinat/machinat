@@ -10,6 +10,7 @@ import Auth, {
   CheckDataResult,
 } from '@sociably/auth';
 import BasicAuthenticator from '@sociably/auth/basicAuth';
+import { attachWebviewParamsOnUrl } from '@sociably/webview/client';
 import { TELEGRAM } from '../constant.js';
 import BotP from '../Bot.js';
 import TelegramUser from '../User.js';
@@ -99,20 +100,25 @@ export class TelegramServerAuthenticator
 
   getAuthUrl(
     botId: number,
-    chatId?: number | string,
-    redirectUrl?: string,
+    options?: {
+      chatId?: number | string;
+      redirectUrl?: string;
+      webviewParams?: Record<string, string>;
+    },
   ): string {
     const url = new URL(this.operator.getAuthUrl(TELEGRAM));
     url.searchParams.set(BOT_ID_QUERY, botId.toString());
 
-    if (chatId) {
-      url.searchParams.set(CHAT_ID_QUERY, chatId.toString());
+    if (options?.chatId) {
+      url.searchParams.set(CHAT_ID_QUERY, options.chatId.toString());
     }
-    if (redirectUrl) {
-      url.searchParams.set(REDIRECT_QUERY, redirectUrl);
+    if (options?.redirectUrl) {
+      url.searchParams.set(REDIRECT_QUERY, options.redirectUrl);
     }
 
-    return url.href;
+    return options?.webviewParams
+      ? attachWebviewParamsOnUrl(url.href, options.webviewParams)
+      : url.href;
   }
 
   async delegateAuthRequest(
@@ -241,7 +247,7 @@ export class TelegramServerAuthenticator
         botName: agentSettings.botName,
         appName: this.appName,
         appIconUrl: this.appIconUrl,
-        callbackUrl: this.getAuthUrl(botId, chatId, redirectUrl),
+        callbackUrl: this.getAuthUrl(botId, { chatId, redirectUrl }),
       }),
     );
   }

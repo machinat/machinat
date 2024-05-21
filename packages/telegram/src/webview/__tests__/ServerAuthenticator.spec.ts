@@ -488,17 +488,26 @@ test('.getAuthUrl()', () => {
     `"https://sociably.io/MyApp/auth/telegram?botId=12345"`,
   );
   expect(
-    authenticator.getAuthUrl(12345, undefined, 'foo?bar=baz'),
+    authenticator.getAuthUrl(12345, { chatId: 67890 }),
+  ).toMatchInlineSnapshot(
+    `"https://sociably.io/MyApp/auth/telegram?botId=12345&chatId=67890"`,
+  );
+  expect(
+    authenticator.getAuthUrl(12345, { redirectUrl: 'foo?bar=baz' }),
   ).toMatchInlineSnapshot(
     `"https://sociably.io/MyApp/auth/telegram?botId=12345&redirectUrl=foo%3Fbar%3Dbaz"`,
   );
   expect(
-    authenticator.getAuthUrl(12345, 67890, 'foo?bar=baz'),
+    authenticator.getAuthUrl(12345, {
+      chatId: 67890,
+      redirectUrl: 'foo?bar=baz',
+      webviewParams: { hello: 'world' },
+    }),
   ).toMatchInlineSnapshot(
-    `"https://sociably.io/MyApp/auth/telegram?botId=12345&chatId=67890&redirectUrl=foo%3Fbar%3Dbaz"`,
+    `"https://sociably.io/MyApp/auth/telegram?botId=12345&chatId=67890&redirectUrl=foo%3Fbar%3Dbaz&webviewParams=%7B%22hello%22%3A%22world%22%7D"`,
   );
 
-  expect(httpOperator.getAuthUrl).toHaveBeenCalledTimes(3);
+  expect(httpOperator.getAuthUrl).toHaveBeenCalledTimes(4);
   expect(httpOperator.getAuthUrl).toHaveBeenCalledWith('telegram');
 });
 

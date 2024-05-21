@@ -15,19 +15,21 @@ type WebviewButtonParamProps = {
   index?: number;
   /** Pass `user.profile` on the auth context while login */
   userProfile?: UserProfile;
+  /** Additional query parameters to pass to the webview page */
+  params?: Record<string, string>;
 };
 
 const WebviewButtonParam =
   (authenticator: ServerAuthenticator, thread: RenderingTarget) =>
-  ({ page, index }: WebviewButtonParamProps) => {
+  ({ page, index, params }: WebviewButtonParamProps) => {
     if (!thread || !(thread instanceof WhatsAppChat)) {
       throw new Error('WebviewButtonParam can only be used in WhatsAppChat');
     }
 
-    const urlPostfix = authenticator.getAuthUrlPostfix(
-      thread,
-      page ? posixPath.join('.', page) : undefined,
-    );
+    const urlPostfix = authenticator.getAuthUrlPostfix(thread, {
+      redirectUrl: page ? posixPath.join('.', page) : undefined,
+      webviewParams: params,
+    });
     return <UrlButtonParam urlPostfix={urlPostfix} index={index} />;
   };
 

@@ -41,7 +41,12 @@ test('rendering to UrlButton', async () => {
     WebviewAction(
       authenticator,
       chat,
-    )({ label: 'Foo', page: '/foo?bar=baz', liffAppChoice: 'compact' }),
+    )({
+      label: 'Foo',
+      page: '/foo?bar=baz',
+      liffAppChoice: 'compact',
+      params: { hello: 'world' },
+    }),
   ).resolves.toMatchInlineSnapshot(`
     <UriAction
       label="Foo"
@@ -61,5 +66,6 @@ test('rendering to UrlButton', async () => {
     path: '/foo?bar=baz',
     chat,
     liffAppChoice: 'compact',
+    webviewParams: { hello: 'world' },
   });
 });

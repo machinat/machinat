@@ -6,6 +6,7 @@ import {
 } from '@sociably/auth';
 import BasicAuthenticator from '@sociably/auth/basicAuth';
 import { MetaApiError } from '@sociably/meta-api';
+import { attachWebviewParamsOnUrl } from '@sociably/webview/client';
 import BotP from '../Bot.js';
 import ProfilerP from '../Profiler.js';
 import FacebookPage from '../Page.js';
@@ -72,12 +73,21 @@ export class FacebookServerAuthenticator
     });
   }
 
-  getAuthUrl(user: FacebookUser, redirectUrl?: string): string {
-    return this.basicAuthenticator.getAuthUrl<FacebookAuthData>(
+  getAuthUrl(
+    user: FacebookUser,
+    options?: {
+      redirectUrl?: string;
+      webviewParams?: Record<string, unknown>;
+    },
+  ): string {
+    const authUrl = this.basicAuthenticator.getAuthUrl<FacebookAuthData>(
       FACEBOOK,
       { page: user.pageId, user: user.id },
-      redirectUrl,
+      options?.redirectUrl,
     );
+    return options?.webviewParams
+      ? attachWebviewParamsOnUrl(authUrl, options.webviewParams)
+      : authUrl;
   }
 
   // eslint-disable-next-line class-methods-use-this

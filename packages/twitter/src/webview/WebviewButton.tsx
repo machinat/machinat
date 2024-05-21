@@ -12,20 +12,21 @@ type WebviewButtonProps = {
   label: string;
   /** The webview page to open */
   page?: string;
+  /** Additional query parameters to pass to the webview page */
+  params?: Record<string, string>;
 };
 
 const WebviewButton =
   (authenticator: ServerAuthenticator, thread: RenderingTarget) =>
-  ({ label, page }: WebviewButtonProps) => {
+  ({ label, page, params: webviewParams }: WebviewButtonProps) => {
     if (!thread || !(thread instanceof TwitterChat)) {
       return null;
     }
 
-    const url = authenticator.getAuthUrl(
-      thread.agentId,
-      thread.userId,
-      page ? posixPath.join('.', page) : undefined,
-    );
+    const url = authenticator.getAuthUrl(thread.agentId, thread.userId, {
+      redirectUrl: page ? posixPath.join('.', page) : undefined,
+      webviewParams,
+    });
     return <UrlButton label={label} url={url} />;
   };
 

@@ -55,6 +55,7 @@ describe('.delegateAuthRequest(req, res, routing)', () => {
       originalPath: '/auth/twitter/login',
       matchedPath: '/auth/twitter',
       trailingPath: 'login',
+      basePath: '/',
     };
 
     await expect(
@@ -182,10 +183,18 @@ test('.getAuthUrl(id, path)', () => {
   );
   expect(authenticator.getAuthUrl('1234567890', '9876543210')).toBe(loginUrl);
   expect(
-    authenticator.getAuthUrl('1234567890', '9876543210', '/foo?bar=baz'),
+    authenticator.getAuthUrl('1234567890', '9876543210', {
+      redirectUrl: '/foo?bar=baz',
+    }),
   ).toBe(loginUrl);
+  expect(
+    authenticator.getAuthUrl('1234567890', '9876543210', {
+      redirectUrl: '/foo',
+      webviewParams: { bar: 'baz' },
+    }),
+  ).toBe(`${loginUrl}&webviewParams=${encodeURIComponent('{"bar":"baz"}')}`);
 
-  expect(basicAuthenticator.getAuthUrl).toHaveBeenCalledTimes(2);
+  expect(basicAuthenticator.getAuthUrl).toHaveBeenCalledTimes(3);
   expect(basicAuthenticator.getAuthUrl).toHaveBeenNthCalledWith(
     1,
     'twitter',
@@ -197,6 +206,12 @@ test('.getAuthUrl(id, path)', () => {
     'twitter',
     { agent: '1234567890', user: '9876543210' },
     '/foo?bar=baz',
+  );
+  expect(basicAuthenticator.getAuthUrl).toHaveBeenNthCalledWith(
+    3,
+    'twitter',
+    { agent: '1234567890', user: '9876543210' },
+    '/foo',
   );
 });
 

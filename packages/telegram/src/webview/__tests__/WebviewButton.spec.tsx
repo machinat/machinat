@@ -33,6 +33,7 @@ it('render to UrlButton', () => {
       text: 'Foo',
       botUserName: 'FooBot',
       forwardText: 'Hello World',
+      params: { hello: 'world' },
       requestWriteAccess: true,
     }),
   ).toMatchInlineSnapshot(`
@@ -63,23 +64,22 @@ it('render to UrlButton', () => {
   `);
 
   expect(authenticator.getAuthUrl).toHaveBeenCalledTimes(3);
-  expect(authenticator.getAuthUrl).toHaveBeenNthCalledWith(
-    1,
-    12345,
-    67890,
-    undefined,
-  );
-  expect(authenticator.getAuthUrl).toHaveBeenNthCalledWith(
-    3,
-    12345,
-    67890,
-    'foo?bar=baz',
-  );
+  expect(authenticator.getAuthUrl).toHaveBeenNthCalledWith(1, 12345, {
+    chatId: 67890,
+  });
+  expect(authenticator.getAuthUrl).toHaveBeenNthCalledWith(2, 12345, {
+    chatId: 67890,
+    webviewParams: { hello: 'world' },
+  });
+  expect(authenticator.getAuthUrl).toHaveBeenNthCalledWith(3, 12345, {
+    chatId: 67890,
+    redirectUrl: 'foo?bar=baz',
+  });
 });
 
 it('throw error if RenderingTarget is not TelegramChat', () => {
   expect(() =>
-    WebviewButton(authenticator, null)({ text: 'Foo' }),
+    WebviewButton(authenticator, null as never)({ text: 'Foo' }),
   ).toThrowErrorMatchingInlineSnapshot(
     `"WebviewButton can only be used in TelegramChat"`,
   );

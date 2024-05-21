@@ -44,7 +44,7 @@ test('rendering to UrlButton', () => {
     WebviewButton(
       authenticator,
       new FacebookChat('12345', { id: '67890' }),
-    )({ title: 'Foo', page: '/foo?bar=baz' }),
+    )({ title: 'Foo', page: '/foo?bar=baz', params: { hello: 'world' } }),
   ).toMatchInlineSnapshot(`
     <UrlButton
       title="Foo"
@@ -56,28 +56,28 @@ test('rendering to UrlButton', () => {
   expect(authenticator.getAuthUrl).toHaveBeenNthCalledWith(
     1,
     new FacebookUser('12345', '67890'),
-    undefined,
+    {},
   );
   expect(authenticator.getAuthUrl).toHaveBeenNthCalledWith(
     2,
     new FacebookUser('12345', '67890'),
-    undefined,
+    {},
   );
   expect(authenticator.getAuthUrl).toHaveBeenNthCalledWith(
     3,
     new FacebookUser('12345', '67890'),
-    'foo?bar=baz',
+    { redirectUrl: 'foo?bar=baz', webviewParams: { hello: 'world' } },
   );
 });
 
 test('throw if thread is not a FacebookChat', () => {
   expect(() =>
-    WebviewButton(authenticator, null)({ title: 'Foo' }),
+    WebviewButton(authenticator, null as never)({ title: 'Foo' }),
   ).toThrowErrorMatchingInlineSnapshot(
     `"WebviewButton can only be used in the FacebookChat with a user ID"`,
   );
   expect(() =>
-    WebviewButton(authenticator, null)({ title: 'Foo', page: '/foo' }),
+    WebviewButton(authenticator, null as never)({ title: 'Foo', page: '/foo' }),
   ).toThrowErrorMatchingInlineSnapshot(
     `"WebviewButton can only be used in the FacebookChat with a user ID"`,
   );

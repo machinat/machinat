@@ -6,11 +6,7 @@ import type {
   ContextOfAuthenticator,
 } from '@sociably/auth';
 import { Connector, ClientEmitter } from '@sociably/websocket/client';
-import {
-  DEFAULT_AUTH_ROUTE,
-  DEFAULT_WEBSOCKET_ROUTE,
-  WEBVIEW_PARAMS_QUERY_KEY,
-} from '../constant.js';
+import { DEFAULT_AUTH_ROUTE, DEFAULT_WEBSOCKET_ROUTE } from '../constant.js';
 import WebviewConnection from '../Connection.js';
 import createEvent from '../utils/createEvent.js';
 import type {
@@ -21,11 +17,12 @@ import type {
   AnyClientAuthenticator,
 } from '../types.js';
 import type { ClientEventContext, ClientOptions } from './types.js';
+import { getWebviewParamsFromUrl } from './utils.js';
 
 class WebviewClient<
   Authenticator extends AnyClientAuthenticator = AnyClientAuthenticator,
   Value extends EventValue = EventValue,
-  Params = null,
+  Params extends null | Record<string, unknown> = null,
 > extends ClientEmitter<
   ClientEventContext<
     Authenticator,
@@ -105,16 +102,7 @@ class WebviewClient<
       .on('error', this._emitError.bind(this));
 
     if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      const params = url.searchParams.get(WEBVIEW_PARAMS_QUERY_KEY);
-
-      if (params) {
-        try {
-          this.params = JSON.parse(params);
-        } catch (error) {
-          console.warn('Failed to parse webview params:', error);
-        }
-      }
+      this.params = getWebviewParamsFromUrl(window.location.href);
     }
 
     if (!this.isMockupMode) {

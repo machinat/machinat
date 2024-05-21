@@ -6,6 +6,7 @@ import {
 } from '@sociably/auth';
 import BasicAuthenticator from '@sociably/auth/basicAuth';
 import { MetaApiError } from '@sociably/meta-api';
+import { attachWebviewParamsOnUrl } from '@sociably/webview/client';
 import BotP from '../Bot.js';
 import ProfilerP from '../Profiler.js';
 import InstagramAgent from '../Agent.js';
@@ -78,7 +79,13 @@ export class InstagramServerAuthenticator
     });
   }
 
-  async getAuthUrl(user: InstagramUser, redirectUrl?: string): Promise<string> {
+  async getAuthUrl(
+    user: InstagramUser,
+    options?: {
+      redirectUrl?: string;
+      webviewParams?: Record<string, unknown>;
+    },
+  ): Promise<string> {
     const agent = new InstagramAgent(user.agentId);
     const settings = await this.settingsAccessor.getAgentSettings(agent);
     if (!settings) {
@@ -87,7 +94,7 @@ export class InstagramServerAuthenticator
       );
     }
 
-    return this.basicAuthenticator.getAuthUrl<InstagramAuthData>(
+    const authUrl = this.basicAuthenticator.getAuthUrl<InstagramAuthData>(
       INSTAGRAM,
       {
         agent: {
@@ -96,8 +103,11 @@ export class InstagramServerAuthenticator
         },
         user: user.id,
       },
-      redirectUrl,
+      options?.redirectUrl,
     );
+    return options?.webviewParams
+      ? attachWebviewParamsOnUrl(authUrl, options.webviewParams)
+      : authUrl;
   }
 
   // eslint-disable-next-line class-methods-use-this

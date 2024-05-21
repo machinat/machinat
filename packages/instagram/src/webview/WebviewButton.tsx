@@ -10,6 +10,8 @@ type WebviewButtonProps = {
   title: string;
   /** The webview page to open */
   page?: string;
+  /** Additional query parameters to pass to the webview page */
+  params?: Record<string, string>;
   /** Height of the Webview. */
   webviewHeightRatio?: 'compact' | 'tall' | 'full';
   /**
@@ -24,6 +26,7 @@ const WebviewButton =
   async ({
     title,
     page,
+    params: webviewParams,
     webviewHeightRatio,
     hideShareButton,
   }: WebviewButtonProps) => {
@@ -39,7 +42,10 @@ const WebviewButton =
 
     const url = await authenticator.getAuthUrl(
       new InstagramUser(thread.agent.id, thread.target.id),
-      page ? posixPath.join('.', page) : undefined,
+      {
+        redirectUrl: page ? posixPath.join('.', page) : undefined,
+        webviewParams,
+      },
     );
     return (
       <UrlButton

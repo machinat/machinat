@@ -126,9 +126,10 @@ describe('.getLiffUrl(channel, path, chat)', () => {
         path: 'foo?bar=baz',
         chat: new LineChat('_BOT_CHAN_ID_', 'room', '_ROOM_ID_'),
         liffAppChoice: 'compact',
+        webviewParams: { hello: 'world' },
       }),
     ).resolves.toMatchInlineSnapshot(
-      `"https://liff.line.me/_LOGIN_CHAN_ID_-_LIFF_2_/foo?bar=baz&chatChannelId=_BOT_CHAN_ID_&liffId=_LOGIN_CHAN_ID_-_LIFF_2_&roomId=_ROOM_ID_"`,
+      `"https://liff.line.me/_LOGIN_CHAN_ID_-_LIFF_2_/foo?bar=baz&chatChannelId=_BOT_CHAN_ID_&liffId=_LOGIN_CHAN_ID_-_LIFF_2_&roomId=_ROOM_ID_&webviewParams=%7B%22hello%22%3A%22world%22%7D"`,
     );
   });
 

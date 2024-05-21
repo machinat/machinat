@@ -5,6 +5,7 @@ import {
   CheckDataResult,
 } from '@sociably/auth';
 import BasicAuthenticator from '@sociably/auth/basicAuth';
+import { attachWebviewParamsOnUrl } from '@sociably/webview/client';
 import BotP from '../Bot.js';
 import { WHATSAPP } from '../constant.js';
 import { AgentSettingsAccessorI } from '../interface.js';
@@ -91,18 +92,26 @@ export class WhatsAppServerAuthenticator
     });
   }
 
-  getAuthUrlPostfix(chat: WhatsAppChat, redirectUrl?: string): string {
-    const url = new URL(
-      this.basicAuthenticator.getAuthUrl<WhatsAppAuthCrendential>(
-        WHATSAPP,
-        {
-          agent: chat.agentNumberId,
-          user: chat.userNumberId,
-        },
-        redirectUrl,
-      ),
+  getAuthUrlPostfix(
+    chat: WhatsAppChat,
+    options?: {
+      redirectUrl?: string;
+      webviewParams?: Record<string, unknown>;
+    },
+  ): string {
+    let url = this.basicAuthenticator.getAuthUrl<WhatsAppAuthCrendential>(
+      WHATSAPP,
+      {
+        agent: chat.agentNumberId,
+        user: chat.userNumberId,
+      },
+      options?.redirectUrl,
     );
-    return `${url.pathname}${url.search}${url.hash}`;
+    if (options?.webviewParams) {
+      url = attachWebviewParamsOnUrl(url, options.webviewParams);
+    }
+    const { pathname, search, hash } = new URL(url);
+    return `${pathname}${search}${hash}`;
   }
 
   // eslint-disable-next-line class-methods-use-this

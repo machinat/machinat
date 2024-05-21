@@ -168,7 +168,7 @@ ${when(recognizer === 'dialogflow')`
         accessToken: WHATSAPP_ACCESS_TOKEN,
         webhookVerifyToken: META_WEBHOOK_VERIFY_TOKEN,
         agentSettings: {
-          budsinessAccountId: WHATSAPP_BUSINESS_ACCOUNT_ID,
+          businessAccountId: WHATSAPP_BUSINESS_ACCOUNT_ID,
           phoneNumber: WHATSAPP_PHONE_NUMBER,
           numberId: WHATSAPP_NUMBER_ID,
         },

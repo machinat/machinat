@@ -46,28 +46,7 @@
     "typescript": "^5.2.2"
   },
   "workspaces": [
-    "packages/auth",
-    "packages/core",
-    "packages/create-app",
-    "packages/dialogflow",
-    "packages/http",
-    "packages/instagram",
-    "packages/jest-snapshot-serializer",
-    "packages/line",
-    "packages/dev-tools",
-    "packages/facebook",
-    "packages/messenger",
-    "packages/meta-api",
-    "packages/next",
-    "packages/redis-state",
-    "packages/script",
-    "packages/stream",
-    "packages/postgres-state",
-    "packages/telegram",
-    "packages/twitter",
-    "packages/whatsapp",
-    "packages/websocket",
-    "packages/webview"
+    "packages/*"
   ],
   "lint-staged": {
     "*.{js,ts,tsx}": [

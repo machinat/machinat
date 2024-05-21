@@ -12,18 +12,20 @@ type WebviewActionProps = {
   page?: string;
   /** Choose the LIFF App to use */
   liffAppChoice?: keyof LiffAppChoiceSetting;
+  /** Additional query parameters to pass to the webview page */
+  params?: Record<string, string>;
 };
 
 const WebviewAction =
   (authenticator: ServerAuthenticator, targetChat: RenderingTarget) =>
-  async ({ label, page, liffAppChoice }: WebviewActionProps) => {
+  async ({ label, page, liffAppChoice, params }: WebviewActionProps) => {
     if (!targetChat || !(targetChat instanceof LineChat)) {
       throw new Error('WebviewAction can only be used in a LineChat');
     }
 
     const url = await authenticator.getLiffUrl(
       new LineChannel(targetChat.channelId),
-      { path: page, chat: targetChat, liffAppChoice },
+      { path: page, chat: targetChat, liffAppChoice, webviewParams: params },
     );
     return <UriAction label={label} uri={url} />;
   };

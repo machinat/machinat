@@ -22,6 +22,8 @@ type WebviewButtonProps = {
    * user.
    */
   requestWriteAccess?: boolean;
+  /** Additional query parameters to pass to the webview page */
+  params?: Record<string, string>;
 };
 
 const WebviewButton =
@@ -32,6 +34,7 @@ const WebviewButton =
     forwardText,
     botUserName,
     requestWriteAccess,
+    params: webviewParams,
   }: WebviewButtonProps) => {
     let botId: number;
     let chatId: undefined | string | number;
@@ -42,11 +45,11 @@ const WebviewButton =
       throw new Error('WebviewButton can only be used in TelegramChat');
     }
 
-    const url = authenticator.getAuthUrl(
-      botId,
+    const url = authenticator.getAuthUrl(botId, {
       chatId,
-      page ? posixPath.join('.', page) : undefined,
-    );
+      webviewParams,
+      redirectUrl: page ? posixPath.join('.', page) : undefined,
+    });
     return (
       <UrlButton
         login

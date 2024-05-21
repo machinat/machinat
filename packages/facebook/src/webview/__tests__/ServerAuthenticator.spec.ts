@@ -203,9 +203,17 @@ test('.getAuthUrl(id, path)', () => {
     agentSettingsAccessor,
   );
   expect(authenticator.getAuthUrl(user)).toBe(loginUrl);
-  expect(authenticator.getAuthUrl(user, '/foo?bar=baz')).toBe(loginUrl);
+  expect(authenticator.getAuthUrl(user, { redirectUrl: '/foo?bar=baz' })).toBe(
+    loginUrl,
+  );
+  expect(
+    authenticator.getAuthUrl(user, {
+      redirectUrl: '/foo',
+      webviewParams: { bar: 'baz' },
+    }),
+  ).toBe(`${loginUrl}&webviewParams=${encodeURIComponent('{"bar":"baz"}')}`);
 
-  expect(basicAuthenticator.getAuthUrl).toHaveBeenCalledTimes(2);
+  expect(basicAuthenticator.getAuthUrl).toHaveBeenCalledTimes(3);
   expect(basicAuthenticator.getAuthUrl).toHaveBeenNthCalledWith(
     1,
     'facebook',
@@ -217,6 +225,12 @@ test('.getAuthUrl(id, path)', () => {
     'facebook',
     { page: '12345', user: '67890' },
     '/foo?bar=baz',
+  );
+  expect(basicAuthenticator.getAuthUrl).toHaveBeenNthCalledWith(
+    3,
+    'facebook',
+    { page: '12345', user: '67890' },
+    '/foo',
   );
 });
 

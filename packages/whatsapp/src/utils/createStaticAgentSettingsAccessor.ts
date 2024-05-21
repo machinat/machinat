@@ -38,14 +38,14 @@ export const multiStaticAgentSettingsAccessor = (
   settings: WhatsAppBusinessAccountSettings[],
 ): AgentSettingsAccessorI => {
   const settingsMapping = new Map<string, WhatsAppAgentSettings>();
-  for (const { budsinessAccountId, numbers } of settings) {
+  for (const { businessAccountId, numbers } of settings) {
     for (const { numberId, phoneNumber } of numbers) {
       settingsMapping.set(
         numberId,
         normalizeSettingPhoneNumber({
           numberId,
           phoneNumber,
-          budsinessAccountId,
+          businessAccountId,
         }),
       );
     }
