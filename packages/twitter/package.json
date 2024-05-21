@@ -1,6 +1,6 @@
 {
   "name": "@sociably/twitter",
-  "version": "0.9.0-alpha.26",
+  "version": "0.9.0-alpha.45",
   "type": "module",
   "description": "Twitter platform of Sociably.js",
   "author": "Patrick Liu <zeldalink0515@gmail.com>  (https://github.com/lrills)",

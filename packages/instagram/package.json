@@ -1,6 +1,6 @@
 {
   "name": "@sociably/instagram",
-  "version": "0.9.0-alpha.40",
+  "version": "0.9.0-alpha.45",
   "type": "module",
   "description": "Instagram platform of Sociably.js",
   "author": "Patrick Liu <zeldalink0515@gmail.com>  (https://github.com/lrills)",

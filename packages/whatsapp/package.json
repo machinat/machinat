@@ -1,6 +1,6 @@
 {
   "name": "@sociably/whatsapp",
-  "version": "0.9.0-alpha.42",
+  "version": "0.9.0-alpha.45",
   "type": "module",
   "description": "WhatsApp platform of Sociably.js",
   "author": "Patrick Liu <zeldalink0515@gmail.com>  (https://github.com/lrills)",
