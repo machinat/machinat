@@ -11,14 +11,14 @@ function useEventReducer<
   > = WebviewClient<AnyClientAuthenticator, EventValue>,
 >(
   client: Client,
-  reducer: (value: T, context: EventContextOfClient<Client>) => T,
+  reducer: (currentValue: T, context: EventContextOfClient<Client>) => T,
   initialValue: T,
 ): T;
 
 function useEventReducer<T>(
   client: WebviewClient<AnyClientAuthenticator, EventValue>,
   reducer: (
-    value: T,
+    currentValue: T,
     context: ClientEventContext<AnyClientAuthenticator, EventValue>,
   ) => T,
   initialValue: T,

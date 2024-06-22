@@ -1,8 +1,8 @@
 import { EventEmitter } from 'events';
 import thenifiedly from 'thenifiedly';
-import type WsSocket from 'ws';
 import SocketError from './error.js';
 import type { UpgradeRequestInfo, EventInput } from './types.js';
+import { EmittableWebSocket } from './types.js';
 
 type TimeoutID = ReturnType<typeof setTimeout>;
 
@@ -71,46 +71,59 @@ export type DisconnectBody = {
   reason?: string;
 };
 
-/**
+/*
  * Communication
  *
  * Connect Handshake: this initiate a connection
  *
- * +---------+ +---------+ | Client | | Server | +---------+ +---------+ | | |
- * LOGIN | |----------------------->| | | | | verify auth | |------------ | | |
- *
- * | |<----------- | | --------------------------\
- * | |-| or initiative by Server | | | |-------------------------| | | | CONNECT
- * | |<-----------------------| | | | CONNECT | |----------------------->| | |
- *
- * -----------------------\
- *
- * | |-| ok to emit event now | | | |----------------------| | DISPATCH |
- * |<-----------------------| | |
+ *  +---------+             +---------+
+ *  | Client  |             | Server  |
+ *  +---------+             +---------+
+ *       |                        |
+ *       | LOGIN                  |
+ *       |----------------------->|
+ *       |                        |
+ *       |                        | verify auth
+ *       |                        |------------
+ *       |                        |           |
+ *       |                        |<-----------
+ *       |                        | --------------------------\
+ *       |                        |-| or initiative by Server |
+ *       |                        | |-------------------------|
+ *       |                        |
+ *       |                CONNECT |
+ *       |<-----------------------|
+ *       |                        |
+ *       | CONNECT                |
+ *       |----------------------->|
+ *       |                        | -----------------------\
+ *       |                        |-| ok to emit event now |
+ *       |                        | |----------------------|
+ *       |               DISPATCH |
+ *       |<-----------------------|
+ *       |                        |
  *
  * Disconnect Handshake: disconnect a connected connection, this can be initiate
- * on both Client and Server
+ *                       on both Client and Server
  *
  *                        +---------+                +---------+
- *                | Client  |                | Server  |
- *                +---------+                +---------+
- *                     |                           |
- *                     |                DISCONNECT |
- *                     |<--------------------------|
- *
- * --------------------------\ | |
- *
- * | event before DISCONNECT |-| |
- * | echoed back still count | | |
- * |-------------------------| | |
- *
+ *                        | Client  |                | Server  |
+ *                        +---------+                +---------+
  *                             |                           |
- *                     | DISPATCH                  |
- *                     |-------------------------->|
- *                     |                           |
- *                     | DISCONNECT                |
- *                     |-------------------------->|
- *                     |                           |
+ *                             |                DISCONNECT |
+ *                             |<--------------------------|
+ * --------------------------\ |                           |
+ * | event before DISCONNECT |-|                           |
+ * | echoed back still count | |                           |
+ * |-------------------------| |                           |
+ *                             |                           |
+ *                             | DISPATCH                  |
+ *                             |-------------------------->|
+ *                             |                           |
+ *                             | DISCONNECT                |
+ *                             |-------------------------->|
+ *                             |                           |
+ *
  */
 const STATE_CONNECTED_OK = 0;
 
@@ -125,17 +138,17 @@ const MASK_DISCONNECTING = FLAG_DISCONNECT_SENT | FLAG_DISCONNECT_RECEIVED;
 
 const HANDSHAKE_TIMEOUT = 20 * 1000;
 
-function handleWsMessage(this: WsSocket & WithSocket, data: any) {
+function handleWsMessage(this: EmittableWebSocket & WithSocket, data: any) {
   const { socket } = this;
   socket._handlePacket(data).catch(socket._emitError.bind(socket));
 }
 
-function handleWsOpen(this: WsSocket & WithSocket) {
+function handleWsOpen(this: EmittableWebSocket & WithSocket) {
   this.socket._emitOpen();
 }
 
 function handleWsClose(
-  this: WsSocket & WithSocket,
+  this: EmittableWebSocket & WithSocket,
   code: number,
   reason: string,
 ) {
@@ -143,7 +156,7 @@ function handleWsClose(
   socket._emitClose(code, reason);
 }
 
-function handleWsError(this: WsSocket & WithSocket, err: Error) {
+function handleWsError(this: EmittableWebSocket & WithSocket, err: Error) {
   this.socket._emitError(err);
 }
 
@@ -155,13 +168,13 @@ class Socket extends EventEmitter {
   isClient: boolean;
   request: null | UpgradeRequestInfo;
 
-  private _ws: WsSocket & WithSocket;
+  private _ws: EmittableWebSocket & WithSocket;
   private _seq: number;
 
   private _connectStates: Map<string, number>;
   private _handshakeTimeouts: Map<string, TimeoutID>;
 
-  constructor(wsSocket: WsSocket, request?: UpgradeRequestInfo) {
+  constructor(wsSocket: EmittableWebSocket, request?: UpgradeRequestInfo) {
     super();
 
     this.request = request || null;
@@ -171,7 +184,7 @@ class Socket extends EventEmitter {
     this._connectStates = new Map();
     this._handshakeTimeouts = new Map();
 
-    const wss = wsSocket as WsSocket & WithSocket;
+    const wss = wsSocket as EmittableWebSocket & WithSocket;
     wss.socket = this;
 
     wss.on('message', handleWsMessage);

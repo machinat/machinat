@@ -195,3 +195,19 @@ export type WebSocketClusterBroker = {
   disconnectRemote(conn: ConnIdentifier): Promise<boolean>;
   onRemoteEvent(handler: (job: WebSocketJob) => void): void;
 };
+
+export interface EmittableWebSocket {
+  binaryType: string;
+  bufferedAmount: number;
+  extensions: string;
+  protocol: string;
+  readyState: number;
+  url: string;
+  send(data: unknown, callback: () => void): void;
+  close(code?: number, reason?: string): void;
+  on(event: 'open', listener: () => void): void;
+  on(event: 'message', listener: (data: unknown) => void): void;
+  on(event: 'close', listener: (code: number, reason: string) => void): void;
+  on(event: 'error', listener: (error: Error) => void): void;
+  ping(data?: unknown, mask?: boolean, cb?: (err: Error) => void): void;
+}
